@@ -8,9 +8,13 @@ import time
 import os
 import re
 
-
+from topic_activity_monitor.lib.topic_status_data import TopicStatusData
 from topic_activity_monitor.connection_monitor import ConnectionMonitor
 from topic_activity_monitor.activity_monitor import ActivityMonitor
+
+# Get script's directory so we can find relative path resources
+DIR = os.path.realpath(os.path.dirname(__file__))
+
 
 class NetworkStateTracker(object):
     def __init__(self, ros_node, args):
