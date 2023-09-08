@@ -5,7 +5,10 @@ package_name = 'topic_activity_monitor'
 setup(
     name=package_name,
     version='0.1.0',
-    packages=[package_name],
+    packages=[package_name,
+              package_name + "/config"],
+              package_name + "/lib"],
+    package_data={package_name + "/config": ["*.ini"]},
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
@@ -20,6 +23,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            "topic_activity_monitor = topic_activity_monitor.topic_activity_monitor:main",
         ],
     },
 )
