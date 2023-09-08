@@ -22,6 +22,8 @@ class ActivityStatus(Enum):
 
 
 class TopicStatusData(object):
+    """ Mirrors the TopicStatus.msg
+    """
     def __init__(self, name, msg_type, logger=PrintLogger()):
         self.logger = logger
 
