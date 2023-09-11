@@ -17,8 +17,8 @@ uint8 ACT_SLOW          = 2   # Activity Monitoring, Data Received, Slower than 
 uint8 ACT_TIMEOUT       = 3   # Activity Monitoring, Timeout Reached before any data was received
 uint8 ACT_NOT_MONITORED = 4   # Activity Monitoring Not Being Used
 
-int64 activity_deadline       # Upper bound on time between messages, before they are "slow"
+float64 activity_deadline       # Upper bound on time between messages, before they are "slow"
 int64 activity_slow_count     # number of missed deadlines
 
-int64 activity_timeout        # Max delay after last message received
-int64 activitY_timeout_count  # number of timeouts
+float64 activity_timeout        # Max delay after last message received
+int64 activity_timeout_count  # number of timeouts

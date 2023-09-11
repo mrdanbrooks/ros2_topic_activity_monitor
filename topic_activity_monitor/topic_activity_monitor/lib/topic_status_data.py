@@ -33,15 +33,15 @@ class TopicStatusData(object):
         self._topic_name = name
         self._msg_type_name = msg_type
 
-        self.timestamp = 0
-        self.valid_duration = 0
+        self._timestamp = 0.0
+        self._valid_duration = 0.0
 
         self._connection_status = ConnectionStatus.UNDEFINED
 
         self._activity_status = ActivityStatus.UNDEFINED
-        self._activity_deadline = 0
+        self._activity_deadline = 0.0
         self._activity_slow_count = 0
-        self._activity_timeout = 0
+        self._activity_timeout = 0.0
         self._activity_timeout_count = 0
 
     def __setattr__(self, name, value):
@@ -64,6 +64,17 @@ class TopicStatusData(object):
     def _set_msg_type_name(self, value: str):
         raise Exception("TopicStatusData.msg_type_name is read only")
 
+    def _set_timestamp(self, timestamp):
+        if not self._timestamp == timestamp:
+            self._updated = True
+            self._timestamp = timestamp
+
+    def _set_valid_duration(self, valid_duration):
+        if not self._valid_duration == valid_duration:
+            self._updated = True
+            self._valid_duration = valid_duration
+
+
     def _set_activity_status(self, status):
         if isinstance(status, int):
             status = ActivityStatus(status)
@@ -78,7 +89,7 @@ class TopicStatusData(object):
             status = ConnectionStatus(status)
         if not isinstance(status, ConnectionStatus):
             raise ValueError("TopicStatusData.connection_status must be type int or ConnectionStatus()")
-        if not self._connection_status == status
+        if not self._connection_status == status:
             self._updated = True
             self._connection_status = status
 
@@ -88,6 +99,16 @@ class TopicStatusData(object):
         if not self._activity_slow_count == count:
             self._updated = True
             self._activity_slow_count = count
+
+    def _set_activity_deadline(self, activity_deadline):
+        if not self._activity_deadline == activity_deadline:
+            self._updated = True
+            self._activity_deadline = activity_deadline
+
+    def _set_activity_timeout(self, activity_timeout):
+        if not self._activity_timeout == activity_timeout:
+            self._updated = True
+            self._activity_timeout = activity_timeout
 
     def _set_activity_timeout_count(self, count):
         if self._activity_timeout_count > count:
@@ -126,6 +147,8 @@ class TopicStatusData(object):
         msg = TopicStatus()
         msg.topic_name = self._topic_name
         msg.msg_type = self._msg_type_name
+        msg.timestamp = self._timestamp
+        msg.valid_duration = self._valid_duration
         msg.connection_status = self._connection_status.value
         msg.activity_status = self._activity_status.value
         msg.activity_deadline = self._activity_deadline

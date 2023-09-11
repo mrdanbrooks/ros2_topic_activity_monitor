@@ -6,7 +6,7 @@ setup(
     name=package_name,
     version='0.1.0',
     packages=[package_name,
-              package_name + "/config"],
+              package_name + "/config",
               package_name + "/lib"],
     package_data={package_name + "/config": ["*.ini"]},
     data_files=[

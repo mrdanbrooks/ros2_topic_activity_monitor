@@ -8,7 +8,9 @@ import time
 import os
 import re
 
-from topic_activity_monitor.lib.topic_status_data import TopicStatusData
+from topic_activity_monitor_msgs.msg import TopicStatus
+
+from topic_activity_monitor.lib.topic_status_data import TopicStatusData, ActivityStatus
 from topic_activity_monitor.connection_monitor import ConnectionMonitor
 from topic_activity_monitor.activity_monitor import ActivityMonitor
 
@@ -27,12 +29,16 @@ class NetworkStateTracker(object):
         # Activity Monitor List
         self.activity_monitors = dict() # name(str): ActivityMonitor()
 
-        # Load config
-        self._load_monitor_configs(os.path.join(DIR, args.config_path))
-
-        # TopicStatusData() List - list of all the topics we are tracking
+       # TopicStatusData() List - list of all the topics we are tracking
         self.topics = dict() # name(str): TopicStatusData()
+        #TODO: Send out aggregated List of TopicStatusData
 
+        #TODO: Create watchdogs that invalidates statuses if we don't hear them updated on a regular basis (use timeout value x 1.5 ?)
+        #self._topics_watchdog_timer = self.ros_node.create_timer(0.5, self._topics_watchdog_callback)
+
+        # Load config
+        self._load_config_file(os.path.join(DIR, args.config_path))
+ 
         # Updates topics connection_status (must be started after config has been loaded)
         self.connection_monitor = ConnectionMonitor(ros_node, self)
 
@@ -45,7 +51,7 @@ class NetworkStateTracker(object):
         called by ConnectionMonitor._update()
         """
         for pattern in self.blacklist:
-            if not re.match(pattern, topic_name) is None
+            if not re.match(pattern, topic_name) is None:
                 return True
         return False
 
@@ -55,7 +61,7 @@ class NetworkStateTracker(object):
         - populates topics for those with activity monitoring
         """
 
-        self.logger.info("Loading Config from '%s'" % config_path)
+        self.logger.info("Loading Config from '%s'" % config_file_path)
         config_file = configparser.ConfigParser(inline_comment_prefixes=('#'))
         config_file.read(config_file_path)
 
@@ -72,6 +78,7 @@ class NetworkStateTracker(object):
 
             topic_name = section_name
             try:
+                config = dict()
                 config["TOPIC_NAME"] = topic_name
                 config["TYPE"] = config_file.get(topic_name, "TYPE")
                 config["DEADLINE"] = config_file.getfloat(topic_name, "DEADLINE")
@@ -84,7 +91,7 @@ class NetworkStateTracker(object):
                 raise SystemExit("Error reading config '%s':\n%s" % (config_path, e))
 
             # Skip setting up topics in the blacklist
-            if self.match_blacklist(topic_name):
+            if self.check_blacklist(topic_name):
                 continue
  
             # Add topic, configure with settings from the config
@@ -94,9 +101,9 @@ class NetworkStateTracker(object):
             self.topics[topic_name].activity_timeout = config["TIMEOUT"]
 
             # Setup Activity Monitor for topic
-            activity_monitor = ActivityMonitor(self, config))
+            activity_monitor = ActivityMonitor(self, config)
             activity_monitor.start_monitor()
-            self.activity_monitors.append(activity_monitor)
+            self.activity_monitors[topic_name] = activity_monitor
 
             # Check the values match requirements
             assert(config["WINDOW_SIZE"] >= 2), "%s: WINDOW_SIZE must be >= 2. Received %d" % (topic_name, config["WINDOW_SIZE"])

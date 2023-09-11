@@ -12,7 +12,7 @@ class BetterTimer(object):
         self._timer = self._ros_node.create_timer(self._time, self._callback)
 
     def cancel(self):
-        if self._timer:
+        if self._timer is not None:
             self._timer.cancel()
             self._timer = None
 

@@ -9,13 +9,14 @@ from threading import Thread, RLock
 import rclpy
 from rosidl_runtime_py.utilities import get_message
 
-from topic_activity_monitor.network_state_tracker import NetworkStateTracker
 from topic_activity_monitor.lib.better_timer import BetterTimer
+from topic_activity_monitor.lib.buffer import Buffer
+from topic_activity_monitor.lib.topic_status_data import ActivityStatus
 
 class ActivityMonitor(object):
     def __init__(self, network_state_tracker, config):
         self.ros_node = network_state_tracker.ros_node
-        self.logger = ros_node.get_logger()
+        self.logger = self.ros_node.get_logger()
         self.network_state_tracker = network_state_tracker
 
         self._topic_name = config["TOPIC_NAME"]
@@ -51,10 +52,18 @@ class ActivityMonitor(object):
 
     def __getattribute__(self, value_name):
         """ get certain attributes from the TopicStatusData """
-        if value_name not in ["topic_name", "msg_type_name", "timestamp", "valid_duration", "activity_status",
+        if value_name in ["topic_name", "msg_type_name", "timestamp", "valid_duration", "activity_status",
                         "activity_deadline", "activity_slow_count", "activity_timeout", "activity_timeout_count"]:
             return getattr(self.network_state_tracker.topics[self._topic_name], value_name)
         return super().__getattribute__(value_name)
+
+    def __setattr__(self, name, value):
+        if name in ["topic_name", "msg_type_name", "timestamp", "valid_duration", "activity_status",
+                        "activity_deadline", "activity_slow_count", "activity_timeout", "activity_timeout_count"]:
+            return self.network_state_tracker.topics[self._topic_name].__setattr__(name, value)
+        return super().__setattr__(name, value)
+
+
 
     def start_monitor(self):
         self._running = True
@@ -150,12 +159,12 @@ class ActivityMonitor(object):
         with self._lock:
             self._reconnect_timer.cancel()
             self._reconnect_timer = None
-            self._subscribet()
+            self._subscribe()
 
     def _timeout_callback(self):
         """ called by watchdog timer """
         # TIMEOUT STATE - we failed to receive any messages prior to the TIMEOUT watchdog timer going off
-        self.logger.warn("%s Timeout!" % self._topic_name)
+        self.logger.warn("%s ActivityMonitor - Timeout!" % self._topic_name)
         self.activity_status = ActivityStatus.TIMEOUT
         self.activity_timeout_count += 1
         self._publish_update()
@@ -166,4 +175,4 @@ class ActivityMonitor(object):
         self.timestamp = time.time()
         self.valid_duration = self.activity_timeout * 1.5
         topic_status_data = self.network_state_tracker.topics[self._topic_name]
-        self.network_state_tracker.update_pub.publish(topic_status_data.to_msg()
+        self.network_state_tracker.update_pub.publish(topic_status_data.to_msg())

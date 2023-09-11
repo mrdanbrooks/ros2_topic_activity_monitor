@@ -4,7 +4,7 @@
 import time
 
 from topic_activity_monitor.lib.find_current_endpoints import find_current_endpoints
-from topic_activity_monitor.network_state_tracker import NetworkStateTracker
+from topic_activity_monitor.lib.topic_status_data import TopicStatusData, ConnectionStatus
 
 class ConnectionMonitor(object):
     """ Watches ROS network for topic publishers and subscribers 
@@ -46,7 +46,7 @@ class ConnectionMonitor(object):
 
             # Publish update for this topic
             topic_status_data.timestamp = time.time()
-            self.network_state_tracker.update_pub(topic_status_data.to_msg())
+            self.network_state_tracker.update_pub.publish(topic_status_data.to_msg())
 
 
 
